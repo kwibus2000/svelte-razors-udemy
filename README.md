@@ -1,4 +1,6 @@
-# GitHub : svelte-razors-udemy
+# GitHub : svelte-razors-udemy https://public.adrienks.now.sh/
+
+https://public-nine-chi.now.sh/
 
 _Psst — looking for a shareable component template? Go here --> [sveltejs/component-template](https://github.com/sveltejs/component-template)_
 
