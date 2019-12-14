@@ -1,5 +1,5 @@
-import { writable, derived } from "svelte/store";
-import localProducts from "../localProducts";
+import { writable, derived } from 'svelte/store';
+import localProducts from '../localProducts';
 const store = writable(flattenProducts([...localProducts]));
 
 // subscribe

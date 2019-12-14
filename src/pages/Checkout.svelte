@@ -2,8 +2,9 @@
   import { onMount } from "svelte";
   import { navigate, link } from "svelte-routing";
   import user from "../stores/user";
-  import { cartTotal } from "../stores/cart";
-
+  import cart, { cartTotal } from "../stores/cart";
+  import submitOrder from "../strapi/submitOrder";
+  import globalStore from "../stores/globalStore";
   let name = "";
   // stripe vars
   let cardElement;
@@ -12,14 +13,65 @@
   let stripe;
   let elements;
   // is Empty
-  $: isEmpty = !name;
+  $: isEmpty = !name || $globalStore.alert;
   onMount(() => {
     if (!$user.jwt) {
       navigate("/");
+      return;
+    }
+    if ($cartTotal > 0) {
+      stripe = Stripe("pk_test_Xzm7mWrWIeKSZWjnl4wPgWks007T3Q2aYw");
+      elements = stripe.elements();
+      card = elements.create("card");
+      card.mount(cardElement);
+      card.addEventListener("change", function(event) {
+        if (event.error) {
+          cardErrors.textContent = event.error.message;
+        } else {
+          cardErrors.textContent = "";
+        }
+      });
     }
   });
-  function handleSubmit() {
-    console.log("sumbit");
+  async function handleSubmit() {
+    globalStore.toggleItem(
+      "alert",
+      true,
+      "submitting order... please wait!",
+      false
+    );
+    let response = await stripe
+      .createToken(card)
+      .catch(error => console.log(error));
+    const { token } = response;
+    if (token) {
+      const { id } = token;
+      let order = await submitOrder({
+        name,
+        total: $cartTotal,
+        items: $cart,
+        stripeTokenId: id,
+        userToken: $user.jwt
+      });
+      if (order) {
+        globalStore.toggleItem("alert", true, "your order is complete!");
+        cart.set([]);
+        localStorage.setItem("cart", JSON.stringify([]));
+        navigate("/");
+        return;
+      } else {
+        globalStore.toggleItem(
+          "alert",
+          true,
+          "there was an error with your order. please try again",
+          true
+        );
+      }
+
+      // token.id
+      // submit the order
+    } else {
+    }
   }
 </script>
 
